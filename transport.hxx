@@ -7,6 +7,7 @@
 //
 
 #if defined(__unix) || defined(__unix__)
+#include <sys/errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
