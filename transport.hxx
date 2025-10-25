@@ -159,11 +159,11 @@ extern "C" char *plusminus_locale()
 		__plusminus()
 		{
 			setlocale(LC_CTYPE, ENV_LOCALE);
-			int l = wctomb(str, (wchar_t)(unsigned char)'�');
+			int l = wctomb(str, (wchar_t)(unsigned char)'a');
 			if (l > 0)
 				str[l] = '\0';
 			else
-				str[0] = '�', str[1] = '\0';
+				str[0] = 'a', str[1] = '\0';
 		}
 		~__plusminus() {}
 		operator char *() { return str; }
