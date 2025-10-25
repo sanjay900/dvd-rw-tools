@@ -1962,7 +1962,7 @@ public:
 		CFMutableDictionaryRef match, bsddev;
 		CFNumberRef num;
 		int i;
-
+		printf("test\r\n");
 		int result = 0;
 		/* first, create a dictionary to match the device. This is needed to get the
 		* service. */
@@ -1980,6 +1980,7 @@ public:
 							CFSTR("SCSITaskUserClientDevice"));
 		CFDictionarySetValue(match_dict, CFSTR(kIOPropertyMatchKey), sub_dict);
 
+		printf("test2\r\n");
 		/* get an iterator for searching for the service. */
 		kern_return_t kr;
 		io_iterator_t iterator = IO_OBJECT_NULL;
@@ -1990,6 +1991,7 @@ public:
 		if(!iterator | (kr != kIOReturnSuccess))
 			return -1;
 
+		printf("test3\r\n");
 		SInt32 score;
     	HRESULT herr;
 		kern_return_t err;
@@ -2003,6 +2005,7 @@ public:
 		if(err != noErr) {
 			return -1;
 		}
+		printf("test4\r\n");
 		/* query the plugin interface for task interface */
 		herr = (*plugin)->QueryInterface(plugin,
 								CFUUIDGetUUIDBytes(kIOSCSITaskDeviceInterfaceID), (LPVOID*)&taskif);
@@ -2010,6 +2013,7 @@ public:
 			IODestroyPlugInInterface(plugin);
 			return -1;
 		}
+		printf("test5\r\n");
 
 		err = (*taskif)->ObtainExclusiveAccess(taskif);
 		if(err != noErr) {
@@ -2017,6 +2021,7 @@ public:
 			IODestroyPlugInInterface(plugin);
 			return -1;
 		}
+		printf("test6\r\n");
 
 		return 1;
 	}
