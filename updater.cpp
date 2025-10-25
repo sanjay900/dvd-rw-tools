@@ -332,77 +332,77 @@ int main(int argc, char *argv[])
     auto eaddr = (address + len + 0xFFF) & ~0xFFF;
     int blocksize;
     address = saddr;
-    // erase
-    while (address < eaddr) {
-        if ((address & 0xFFFF) == 0 && (eaddr-address) >= 0x10000) {
-            // # erase a large block (64k)
-            blocksize = 0x10000;
-            cmd[0] = (ERASE_FLASH_BLOCK>> 8) & 0xff;
-            cmd[1] = ERASE_FLASH_BLOCK & 0xff;
-            cmd[2] = (address >> 24) & 0xff;
-            cmd[3] = (address >> 16) & 0xff;
-            cmd[4] = (address >> 8) & 0xff;
-            cmd[5] = address & 0xff;
-            uint8_t resp[16];
-            if (err = cmd.transport(READ, resp, sizeof(resp)))
-            {
-                sperror("erase", err);
-                return -1;
-            }
-            for (int i = 0; i < 16; i++) {
-                printf("%02x, ",resp[i]);
-            }
-            printf("\r\n");
-        }
-        else {
-            // # erase a small block (4k)
-            blocksize = 0x1000;
-            cmd[0] = (ERASE_FLASH_SECTOR >> 8) & 0xff;
-            cmd[1] = ERASE_FLASH_SECTOR & 0xff;
-            cmd[2] = (address >> 24) & 0xff;
-            cmd[3] = (address >> 16) & 0xff;
-            cmd[4] = (address >> 8) & 0xff;
-            cmd[5] = address & 0xff;
-            uint8_t resp[16];
-            if (err = cmd.transport(READ, resp, sizeof(resp)))
-            {
-                sperror("erase", err);
-                return -1;
-            }
-            for (int i = 0; i < 16; i++) {
-                printf("%02x, ",resp[i]);
-            }
-            printf("\r\n");
-        }
+    // // erase
+    // while (address < eaddr) {
+    //     if ((address & 0xFFFF) == 0 && (eaddr-address) >= 0x10000) {
+    //         // # erase a large block (64k)
+    //         blocksize = 0x10000;
+    //         cmd[0] = (ERASE_FLASH_BLOCK>> 8) & 0xff;
+    //         cmd[1] = ERASE_FLASH_BLOCK & 0xff;
+    //         cmd[2] = (address >> 24) & 0xff;
+    //         cmd[3] = (address >> 16) & 0xff;
+    //         cmd[4] = (address >> 8) & 0xff;
+    //         cmd[5] = address & 0xff;
+    //         uint8_t resp[16];
+    //         if (err = cmd.transport(READ, resp, sizeof(resp)))
+    //         {
+    //             sperror("erase", err);
+    //             return -1;
+    //         }
+    //         for (int i = 0; i < 16; i++) {
+    //             printf("%02x, ",resp[i]);
+    //         }
+    //         printf("\r\n");
+    //     }
+    //     else {
+    //         // # erase a small block (4k)
+    //         blocksize = 0x1000;
+    //         cmd[0] = (ERASE_FLASH_SECTOR >> 8) & 0xff;
+    //         cmd[1] = ERASE_FLASH_SECTOR & 0xff;
+    //         cmd[2] = (address >> 24) & 0xff;
+    //         cmd[3] = (address >> 16) & 0xff;
+    //         cmd[4] = (address >> 8) & 0xff;
+    //         cmd[5] = address & 0xff;
+    //         uint8_t resp[16];
+    //         if (err = cmd.transport(READ, resp, sizeof(resp)))
+    //         {
+    //             sperror("erase", err);
+    //             return -1;
+    //         }
+    //         for (int i = 0; i < 16; i++) {
+    //             printf("%02x, ",resp[i]);
+    //         }
+    //         printf("\r\n");
+    //     }
 
-        address += blocksize;
-    }
-    address = 0;
-    while (true) {
-        len = fread(block, 1, sizeof(block), f);
-        if (len == 0) {
-            break;
-        }
-        int err;
-        cmd[0] = (WRITE_FLASH >> 8) & 0xff;
-        cmd[1] = WRITE_FLASH & 0xff;
-        cmd[2] = (address >> 24) & 0xff;
-        cmd[3] = (address >> 16) & 0xff;
-        cmd[4] = (address >> 8) & 0xff;
-        cmd[5] = address & 0xff;
-        cmd[6] = (len >> 8) & 0xff;
-        cmd[7] = len & 0xff;
-        cmd[8] = 0x00;
-        uint16_t crc = crc16(block, len);
-        cmd[9] = crc & 0xFF;
-        cmd[10] = (crc >> 8) & 0xFF;
-        if (err = cmd.transport(WRITE, block, len))
-        {
-            sperror("WRITE FLASH", err);
-            return -1;
-        }
-        address += len;
-    }
+    //     address += blocksize;
+    // }
+    // address = 0;
+    // while (true) {
+    //     len = fread(block, 1, sizeof(block), f);
+    //     if (len == 0) {
+    //         break;
+    //     }
+    //     int err;
+    //     cmd[0] = (WRITE_FLASH >> 8) & 0xff;
+    //     cmd[1] = WRITE_FLASH & 0xff;
+    //     cmd[2] = (address >> 24) & 0xff;
+    //     cmd[3] = (address >> 16) & 0xff;
+    //     cmd[4] = (address >> 8) & 0xff;
+    //     cmd[5] = address & 0xff;
+    //     cmd[6] = (len >> 8) & 0xff;
+    //     cmd[7] = len & 0xff;
+    //     cmd[8] = 0x00;
+    //     uint16_t crc = crc16(block, len);
+    //     cmd[9] = crc & 0xFF;
+    //     cmd[10] = (crc >> 8) & 0xFF;
+    //     if (err = cmd.transport(WRITE, block, len))
+    //     {
+    //         sperror("WRITE FLASH", err);
+    //         return -1;
+    //     }
+    //     address += len;
+    // }
     // const char *fwfile;
     // char confirm[5];
     // unsigned char *fwbuf, inq[128], csbuf[32];
