@@ -1986,7 +1986,7 @@ public:
 		io_iterator_t iterator = IO_OBJECT_NULL;
 		/* get matching services from IO registry. Consumes one reference to
 		* the dictionary, so no need to release that. */
-		kr = IOServiceGetMatchingServices(kIOMasterPortDefault, match_dict, &iterator);
+		kr = IOServiceGetMatchingServices(kIOMainPortDefault, match_dict, &iterator);
 
 		if(!iterator | (kr != kIOReturnSuccess))
 			return 0;
