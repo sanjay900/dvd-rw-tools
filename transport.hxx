@@ -5,22 +5,7 @@
 //
 // For further details see http://fy.chalmers.se/~appro/linux/DVD+RW/
 //
-#if defined(__APPLE__) && defined(__MACH__)
-#include <errno.h>
-
-#ifndef EMEDIUMTYPE
-#define EMEDIUMTYPE EINVAL
-#endif
-#ifndef ENOMEDIUM
-#define ENOMEDIUM ENODEV
-#endif
-#include <locale.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <poll.h>
-#define ENV_LOCALE ""
-#endif
-#if defined(__unix) || defined(__unix__)
+#if defined(__unix) || defined(__unix__) || (defined(__APPLE__) && defined(__MACH__))
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
