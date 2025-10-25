@@ -7,7 +7,6 @@
 //
 
 #if defined(__unix) || defined(__unix__)
-#include <sys/errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -34,7 +33,7 @@ inline long getmsecs()
 #ifndef ENOMEDIUM
 #define ENOMEDIUM ENODEV
 #endif
-
+#error what
 #include <locale.h>
 #define ENV_LOCALE ""
 
