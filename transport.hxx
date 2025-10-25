@@ -17,6 +17,7 @@
 #include <locale.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <poll.h>
 #define ENV_LOCALE ""
 #endif
 #if defined(__unix) || defined(__unix__)
