@@ -1963,111 +1963,60 @@ public:
 		CFNumberRef num;
 		int i;
 
-		if (ref)
-			sb = *ref;
-		else if (stat(file, &sb))
-			return 0;
+		int result = 0;
+		/* first, create a dictionary to match the device. This is needed to get the
+		* service. */
+		CFMutableDictionaryRef match_dict;
+		match_dict = CFDictionaryCreateMutable(kCFAllocatorDefault, 0, NULL, NULL);
+		if(match_dict == NULL)
+			return -1;
 
-		if (!(S_ISBLK(sb.st_mode) || S_ISCHR(sb.st_mode)))
-			return !(errno = ENOTBLK);
+		/* set value to match. In case of the Ipod this is "iPodUserClientDevice". */
+		CFMutableDictionaryRef sub_dict;
+		sub_dict = CFDictionaryCreateMutable(kCFAllocatorDefault, 0, NULL, NULL);
+		if(sub_dict == NULL)
+			return -1;
+		CFDictionarySetValue(sub_dict, CFSTR(kIOPropertySCSITaskDeviceCategory),
+							CFSTR("SCSITaskUserClientDevice"));
+		CFDictionarySetValue(match_dict, CFSTR(kIOPropertyMatchKey), sub_dict);
 
-		if ((match = CFDictionaryCreateMutable(kCFAllocatorDefault, 0,
-											   &kCFTypeDictionaryKeyCallBacks,
-											   &kCFTypeDictionaryValueCallBacks)) == NULL)
-			return !(errno = ENOMEM);
-		if ((bsddev = CFDictionaryCreateMutable(kCFAllocatorDefault, 0,
-												&kCFTypeDictionaryKeyCallBacks,
-												&kCFTypeDictionaryValueCallBacks)) == NULL)
-			return CFRelease(match), !(errno = ENOMEM);
+		/* get an iterator for searching for the service. */
+		kern_return_t kr;
+		io_iterator_t iterator = IO_OBJECT_NULL;
+		/* get matching services from IO registry. Consumes one reference to
+		* the dictionary, so no need to release that. */
+		kr = IOServiceGetMatchingServices(kIOMasterPortDefault, match_dict, &iterator);
 
-		i = major(sb.st_rdev);
-		num = CFNumberCreate(kCFAllocatorDefault, kCFNumberIntType, &i);
-		CFDictionarySetValue(bsddev, CFSTR("BSD Major"), num);
-		CFRelease(num);
+		if(!iterator | (kr != kIOReturnSuccess))
+			return -1;
 
-		i = minor(sb.st_rdev);
-		num = CFNumberCreate(kCFAllocatorDefault, kCFNumberIntType, &i);
-		CFDictionarySetValue(bsddev, CFSTR("BSD Minor"), num);
-		CFRelease(num);
+		SInt32 score;
+    	HRESULT herr;
+		kern_return_t err;
+		io_service_t device = IO_OBJECT_NULL;
+		device = IOIteratorNext(iterator);
 
-		CFDictionarySetValue(match, CFSTR(kIOPropertyMatchKey), bsddev);
-		CFRelease(bsddev);
+		err = IOCreatePlugInInterfaceForService(device, kIOSCSITaskDeviceUserClientTypeID,
+												kIOCFPlugInInterfaceID, &plugin,
+												&score);
 
-		if ((scsiob = IOServiceGetMatchingService(kIOMasterPortDefault, match)) == IO_OBJECT_NULL)
-			return !(errno = ENXIO);
-
-		// traverse up to "SCSITaskAuthoringDevice"
-		kern_return_t kret;
-		while ((kret = IORegistryEntryGetParentEntry(scsiob, kIOServicePlane,
-													 &parent)) == kIOReturnSuccess)
-		{
-			CFStringRef uclient;
-			const char *s;
-			int cmp;
-
-			IOObjectRelease(scsiob);
-			scsiob = parent;
-			uclient = (CFStringRef)IORegistryEntryCreateCFProperty(scsiob,
-																   CFSTR(kIOPropertySCSITaskDeviceCategory),
-																   kCFAllocatorDefault, 0);
-			if (uclient)
-			{
-				s = CFStringGetCStringPtr(uclient, kCFStringEncodingMacRoman);
-				cmp = strcmp(s, kIOPropertySCSITaskAuthoringDevice);
-				CFRelease(uclient);
-				if (cmp == 0)
-					break;
-			}
+		if(err != noErr) {
+			return -1;
 		}
-		if (kret != kIOReturnSuccess)
-		{
-			if (scsiob != IO_OBJECT_NULL)
-				IOObjectRelease(scsiob);
-			return !(errno = ENXIO);
+		/* query the plugin interface for task interface */
+		herr = (*plugin)->QueryInterface(plugin,
+								CFUUIDGetUUIDBytes(kIOSCSITaskDeviceInterfaceID), (LPVOID*)&taskif);
+		if(herr != S_OK) {
+			IODestroyPlugInInterface(plugin);
+			return -1;
 		}
 
-		SInt32 score = 0;
-		if (IOCreatePlugInInterfaceForService(scsiob,
-											  kIOMMCDeviceUserClientTypeID,
-											  kIOCFPlugInInterfaceID,
-											  &plugin, &score) != kIOReturnSuccess)
-		{
-			IOObjectRelease(scsiob);
-			return !(errno = ENXIO);
+		err = (*taskif)->ObtainExclusiveAccess(taskif);
+		if(err != noErr) {
+			(*taskif)->Release(taskif);
+			IODestroyPlugInInterface(plugin);
+			return -1;
 		}
-		if ((*plugin)->QueryInterface(plugin,
-									  CFUUIDGetUUIDBytes(kIOMMCDeviceInterfaceID),
-									  (void **)&mmcdif) != S_OK)
-		{
-			IODestroyPlugInInterface(plugin), plugin = NULL;
-			IOObjectRelease(scsiob);
-			return !(errno = ENXIO);
-		}
-		if ((taskif = (*mmcdif)->GetSCSITaskDeviceInterface(mmcdif)) == NULL)
-		{
-			(*mmcdif)->Release(mmcdif), mmcdif = NULL;
-			IODestroyPlugInInterface(plugin), plugin = NULL;
-			IOObjectRelease(scsiob);
-			return !(errno = ENXIO);
-		}
-
-		//
-		// Note that in order to ObtainExclusiveAccess no corresponding
-		// /dev/[r]diskN may remain open by that time. For reference,
-		// acquiring exclusive access temporarily removes BSD block
-		// storage device from I/O registry as well as corresponding
-		// /dev entries.
-		//
-		if ((*taskif)->ObtainExclusiveAccess(taskif) != kIOReturnSuccess)
-		{
-			(*taskif)->Release(taskif), taskif = NULL;
-			(*mmcdif)->Release(mmcdif), mmcdif = NULL;
-			IODestroyPlugInInterface(plugin), plugin = NULL;
-			IOObjectRelease(scsiob), scsiob = IO_OBJECT_NULL;
-			return !(errno = EBUSY);
-		}
-
-		filename = strdup(file);
 
 		return 1;
 	}
