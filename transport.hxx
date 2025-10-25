@@ -1977,7 +1977,7 @@ public:
 		if(sub_dict == NULL)
 			return 0;
 		CFDictionarySetValue(sub_dict, CFSTR(kIOPropertySCSITaskDeviceCategory),
-							CFSTR("SCSITaskAuthoringDevice"));
+							CFSTR("SCSIPeripheralDevice"));
 		CFDictionarySetValue(match_dict, CFSTR(kIOPropertyMatchKey), sub_dict);
 
 		printf("test2\r\n");
