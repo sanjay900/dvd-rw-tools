@@ -14,6 +14,8 @@
 #ifndef ENOMEDIUM
 #define ENOMEDIUM ENODEV
 #endif
+#include <locale.h>
+#define ENV_LOCALE ""
 #endif
 #if defined(__unix) || defined(__unix__)
 #include <stdio.h>
