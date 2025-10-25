@@ -1969,13 +1969,13 @@ public:
 		CFMutableDictionaryRef match_dict;
 		match_dict = CFDictionaryCreateMutable(kCFAllocatorDefault, 0, NULL, NULL);
 		if(match_dict == NULL)
-			return -1;
+			return 0;
 
 		/* set value to match. In case of the Ipod this is "iPodUserClientDevice". */
 		CFMutableDictionaryRef sub_dict;
 		sub_dict = CFDictionaryCreateMutable(kCFAllocatorDefault, 0, NULL, NULL);
 		if(sub_dict == NULL)
-			return -1;
+			return 0;
 		CFDictionarySetValue(sub_dict, CFSTR(kIOPropertySCSITaskDeviceCategory),
 							CFSTR("SCSITaskUserClientDevice"));
 		CFDictionarySetValue(match_dict, CFSTR(kIOPropertyMatchKey), sub_dict);
@@ -1989,7 +1989,7 @@ public:
 		kr = IOServiceGetMatchingServices(kIOMasterPortDefault, match_dict, &iterator);
 
 		if(!iterator | (kr != kIOReturnSuccess))
-			return -1;
+			return 0;
 
 		printf("test3\r\n");
 		SInt32 score;
@@ -2003,7 +2003,7 @@ public:
 												&score);
 
 		if(err != noErr) {
-			return -1;
+			return 0;
 		}
 		printf("test4\r\n");
 		/* query the plugin interface for task interface */
@@ -2011,7 +2011,7 @@ public:
 								CFUUIDGetUUIDBytes(kIOSCSITaskDeviceInterfaceID), (LPVOID*)&taskif);
 		if(herr != S_OK) {
 			IODestroyPlugInInterface(plugin);
-			return -1;
+			return 0;
 		}
 		printf("test5\r\n");
 
@@ -2019,7 +2019,7 @@ public:
 		if(err != noErr) {
 			(*taskif)->Release(taskif);
 			IODestroyPlugInInterface(plugin);
-			return -1;
+			return 0;
 		}
 		printf("test6\r\n");
 
