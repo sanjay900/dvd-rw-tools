@@ -5,7 +5,16 @@
 //
 // For further details see http://fy.chalmers.se/~appro/linux/DVD+RW/
 //
+#if defined(__APPLE__) && defined(__MACH__)
+#include <errno.h>
 
+#ifndef EMEDIUMTYPE
+#define EMEDIUMTYPE EINVAL
+#endif
+#ifndef ENOMEDIUM
+#define ENOMEDIUM ENODEV
+#endif
+#endif
 #if defined(__unix) || defined(__unix__)
 #include <stdio.h>
 #include <stdlib.h>
@@ -33,7 +42,6 @@ inline long getmsecs()
 #ifndef ENOMEDIUM
 #define ENOMEDIUM ENODEV
 #endif
-#error what
 #include <locale.h>
 #define ENV_LOCALE ""
 
